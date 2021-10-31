@@ -5,21 +5,24 @@ from typing import List
 from singer_sdk import Tap, Stream
 from singer_sdk import typing as th  # JSON schema typing helpers
 
-# TODO: Import your custom stream types here:
-from tap_dg_ice.streams import (
+from tap_dg_ice.timestamped_streams import (
     TapDgIceStream,
     IceTransferEvents,
     InitialMintingEvent,
     UpgradeItemEvent,
     UpgradeResolvedEvents,
 )
-# TODO: Compile a list of custom stream types here
-#       OR rewrite discover_streams() below with your custom logic.
+
+from tap_dg_ice.complete_streams import (
+    NFTItems,
+)
+
 STREAM_TYPES = [
     IceTransferEvents,
     InitialMintingEvent,
     UpgradeItemEvent,
     UpgradeResolvedEvents,
+    NFTItems,
 ]
 
 
