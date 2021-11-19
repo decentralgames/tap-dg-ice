@@ -30,6 +30,7 @@ class NFTItems(TapDgIceStreamComplete):
                     id
                 }
                 tokenId
+                level
             }
         }
     """
@@ -43,4 +44,5 @@ class NFTItems(TapDgIceStreamComplete):
             th.Property("id", th.StringType),
         )),
         th.Property("tokenId", th.StringType),
+        th.Property("level", th.IntegerType),
     ).to_dict()
