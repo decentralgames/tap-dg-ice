@@ -151,10 +151,6 @@ class TapDgIceStreamComplete(GraphQLStream):
         if self.results_count == 0 or self.results_count < RESULTS_PER_PAGE:
             return None
 
-        if self.total_results_count >= self.config["incremental_limit"]:
-            self.logger.warn('Limit for this run reached')
-            return None
-
         if previous_token is None:
             return RESULTS_PER_PAGE
         else:
