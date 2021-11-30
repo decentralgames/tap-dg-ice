@@ -18,9 +18,9 @@ class NFTItems(TapDgIceStreamComplete):
         {
             nftitems(
                 first: 1000,
-                offset: $offset,
+                skip: $offset,
                 orderBy: id,
-                orderDirection:desc
+                orderDirection:asc
             ) {
                 id
                 owner {
@@ -34,6 +34,11 @@ class NFTItems(TapDgIceStreamComplete):
             }
         }
     """
+
+    def post_process(self, row: dict, context: Optional[dict] = None) -> dict:
+        """Convert x/y to integers"""
+        row['level'] = int(row['level'])
+        return row
 
     schema = th.PropertiesList(
         th.Property("id", th.StringType),
