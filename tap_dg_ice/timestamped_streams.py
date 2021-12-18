@@ -214,7 +214,6 @@ class UpgradeResolvedEvents(TapDgIceStream):
 
     def get_child_context(self, record: dict, context: Optional[dict]) -> dict:
         """Return a context dictionary for child streams."""
-        self.logger.warn(f"aaaa {record}")
         return {
             "childId": "{}_{}".format(record['tokenAddress']['address'], record['newTokenId'])
         }
