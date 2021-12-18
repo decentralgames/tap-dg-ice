@@ -6,15 +6,11 @@ from singer_sdk import Tap, Stream
 from singer_sdk import typing as th  # JSON schema typing helpers
 
 from tap_dg_ice.timestamped_streams import (
-    TapDgIceStream,
     IceTransferEvents,
     InitialMintingEvent,
     UpgradeItemEvent,
     UpgradeResolvedEvents,
-)
-
-from tap_dg_ice.complete_streams import (
-    NFTItems,
+    NFTItemsUpgraded,
 )
 
 STREAM_TYPES = [
@@ -22,7 +18,7 @@ STREAM_TYPES = [
     InitialMintingEvent,
     UpgradeItemEvent,
     UpgradeResolvedEvents,
-    NFTItems,
+    NFTItemsUpgraded,
 ]
 
 

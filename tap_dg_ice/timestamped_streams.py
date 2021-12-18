@@ -192,7 +192,7 @@ class UpgradeResolvedEvents(TapDgIceStream):
                     id
                     }
                     tokenAddress {
-                    id
+                    address
                     }
                     timestamp
             }
@@ -212,7 +212,69 @@ class UpgradeResolvedEvents(TapDgIceStream):
         )),
     ).to_dict()
 
+    def get_child_context(self, record: dict, context: Optional[dict]) -> dict:
+        """Return a context dictionary for child streams."""
+        self.logger.warn(f"aaaa {record}")
+        return {
+            "childId": "{}_{}".format(record['tokenAddress']['address'], record['newTokenId'])
+        }
+
+
     def post_process(self, row: dict, context: Optional[dict] = None) -> dict:
         """Convert body shape variables"""
         row['timestamp'] = int(row['timestamp'])
         return row
+
+
+class NFTItemsUpgraded(TapDgIceStream):
+    """Define custom stream."""
+    name = "ice_upgrade_resolved_events_nft_items"
+    
+    parent_stream_type = UpgradeResolvedEvents
+
+    primary_keys = ["id"]
+    replication_key = 'id'
+    replication_method = "INCREMENTAL"
+    ignore_parent_replication_keys = True
+    object_returned = 'nftitems'
+    query = """
+        query ($childId: ID!)
+        {
+            nftitems(
+                where:{id:$childId}
+            ) {
+                id
+                owner {
+                    id
+                }
+                token {
+                    id
+                }
+                tokenId
+                level
+            }
+        }
+    """
+
+    def post_process(self, row: dict, context: Optional[dict] = None) -> dict:
+        """Convert level to integer"""
+        row['level'] = int(row['level'])
+        return row
+
+    schema = th.PropertiesList(
+        th.Property("id", th.StringType),
+        th.Property("owner", th.ObjectType(
+            th.Property("id", th.StringType),
+        )),
+        th.Property("token", th.ObjectType(
+            th.Property("id", th.StringType),
+        )),
+        th.Property("tokenId", th.StringType),
+        th.Property("level", th.IntegerType),
+    ).to_dict()
+
+
+    def get_url_params(self, partition, next_page_token: Optional[th.IntegerType] = None) -> dict:
+        return {
+            "childId": partition['childId']
+        }
