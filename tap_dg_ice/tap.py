@@ -10,7 +10,7 @@ from tap_dg_ice.timestamped_streams import (
     InitialMintingEvent,
     UpgradeItemEvent,
     UpgradeResolvedEvents,
-    NFTItemsUpgraded,
+    NFTItems,
 )
 
 STREAM_TYPES = [
@@ -18,7 +18,7 @@ STREAM_TYPES = [
     InitialMintingEvent,
     UpgradeItemEvent,
     UpgradeResolvedEvents,
-    NFTItemsUpgraded,
+    NFTItems,
 ]
 
 

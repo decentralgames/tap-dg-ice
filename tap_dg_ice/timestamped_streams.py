@@ -212,12 +212,6 @@ class UpgradeResolvedEvents(TapDgIceStream):
         )),
     ).to_dict()
 
-    def get_child_context(self, record: dict, context: Optional[dict]) -> dict:
-        """Return a context dictionary for child streams."""
-        return {
-            "childId": "{}_{}".format(record['tokenAddress']['address'], record['newTokenId'])
-        }
-
 
     def post_process(self, row: dict, context: Optional[dict] = None) -> dict:
         """Convert body shape variables"""
@@ -225,23 +219,26 @@ class UpgradeResolvedEvents(TapDgIceStream):
         return row
 
 
-class NFTItemsUpgraded(TapDgIceStream):
+class NFTItems(TapDgIceStream):
     """Define custom stream."""
-    name = "ice_upgrade_resolved_events_nft_items"
-    
-    parent_stream_type = UpgradeResolvedEvents
+    name = "nft_items"
+
 
     primary_keys = ["id"]
-    replication_key = 'id'
+    replication_key = 'createdAt'
     replication_method = "INCREMENTAL"
-    ignore_parent_replication_keys = True
+    is_sorted = True
     object_returned = 'nftitems'
     query = """
-        query ($childId: ID!)
+        query ($timestamp: Int!)
         {
             nftitems(
-                where:{id:$childId}
-            ) {
+                first: 1000,
+                    orderBy: createdAt,
+                    orderDirection: asc,
+                    where:{
+                        createdAt_gte: $timestamp
+            }) {
                 id
                 owner {
                     id
@@ -251,6 +248,7 @@ class NFTItemsUpgraded(TapDgIceStream):
                 }
                 tokenId
                 level
+                createdAt
             }
         }
     """
@@ -271,9 +269,3 @@ class NFTItemsUpgraded(TapDgIceStream):
         th.Property("tokenId", th.StringType),
         th.Property("level", th.IntegerType),
     ).to_dict()
-
-
-    def get_url_params(self, partition, next_page_token: Optional[th.IntegerType] = None) -> dict:
-        return {
-            "childId": partition['childId']
-        }
