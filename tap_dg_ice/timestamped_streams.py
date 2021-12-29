@@ -268,4 +268,5 @@ class NFTItems(TapDgIceStream):
         )),
         th.Property("tokenId", th.StringType),
         th.Property("level", th.IntegerType),
+        th.Property("createdAt", th.IntegerType),
     ).to_dict()
