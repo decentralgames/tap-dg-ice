@@ -11,6 +11,7 @@ from tap_dg_ice.timestamped_streams import (
     UpgradeItemEvent,
     UpgradeResolvedEvents,
     NFTItems,
+    IceUSDCPAir,
 )
 
 STREAM_TYPES = [
@@ -19,6 +20,7 @@ STREAM_TYPES = [
     UpgradeItemEvent,
     UpgradeResolvedEvents,
     NFTItems,
+    IceUSDCPAir,
 ]
 
 
@@ -29,7 +31,8 @@ class TapTapDgIce(Tap):
     # TODO: Update this section with the actual config values you expect:
     config_jsonschema = th.PropertiesList(
         th.Property("start_updated_at", th.IntegerType, default=1),
-        th.Property("api_url", th.StringType, default='https://api.thegraph.com/subgraphs/name/satoshi-naoki/decentralgamesice')
+        th.Property("api_url", th.StringType, default='https://api.thegraph.com/subgraphs/name/satoshi-naoki/decentralgamesice'),
+        th.Property("quickswap_api_url", th.StringType, default='https://api.thegraph.com/subgraphs/name/sameepsi/quickswap06')
     ).to_dict()
 
 

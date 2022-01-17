@@ -96,6 +96,7 @@ class TapDgIceStream(GraphQLStream):
     def _request_with_backoff(
         self, prepared_request, context: Optional[dict]
     ) -> requests.Response:
+
         response = self.requests_session.send(prepared_request)
         if self._LOG_REQUEST_METRICS:
             extra_tags = {}
