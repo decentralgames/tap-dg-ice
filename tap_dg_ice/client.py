@@ -127,61 +127,63 @@ class TapDgIceStream(GraphQLStream):
         return response
 
 
+class TapDgIceStreamByKey(GraphQLStream):
+    """TapDgIce stream class."""
 
-class TapDgIceStreamComplete(GraphQLStream):
-    """TapDgIce stream without replication key."""
+    latest_timestamp = None
+    results_count = None
+    last_key = ''
+    onlyonerow = False
+    incremental_key = 'id'
 
-    total_results_count = 0
-    results_count = 0
-    
+
     @property
-    def url_base(self) -> str:
-        """Return the API URL root, configurable via tap settings."""
-        return self.config["api_url"]
-        
-    def get_url_params(self, partition, next_page_token: Optional[th.IntegerType] = None) -> dict:
-        next_page_token = next_page_token or 0
-        self.logger.info(f'(stream: {self.name}) Next page:{next_page_token}')
+    def http_headers(self) -> dict:
+        """Return the http headers needed."""
+        headers = {}
+        if "user_agent" in self.config:
+            headers["User-Agent"] = self.config.get("user_agent")
+        return headers
 
-        return {
-            "offset": int(next_page_token),
-        }
-
-
-    def get_next_page_token(self, response, previous_token):
-        if self.results_count == 0 or self.results_count < RESULTS_PER_PAGE:
-            return None
-
-        if previous_token is None:
-            return RESULTS_PER_PAGE
-        else:
-            return previous_token + RESULTS_PER_PAGE
-        
-
-    
     def parse_response(self, response) -> Iterable[dict]:
         """Parse the response and return an iterator of result rows."""
         resp_json = response.json()
         try:
             results = resp_json["data"][self.object_returned]
             self.results_count = len(results)
-            self.total_results_count += self.results_count
             for row in results:
+                self.last_key = row[self.incremental_key]
+                
                 yield row
         except Exception as err:
             self.logger.warn(f"(stream: {self.name}) Problem with response: {resp_json}")
             raise err
+
+    def get_url_params(self, partition, next_page_token: Optional[th.IntegerType] = None) -> dict:
+        next_page_token = next_page_token or self.initial_key
+        self.logger.info(f'(stream: {self.name}) Next page:{next_page_token}')
+
+        return {
+            "key": next_page_token,
+        }
+    
+    def get_next_page_token(self, response, previous_token):
+        if self.results_count == 0:
+            return None
+
+        return self.last_key
+
     
     @backoff.on_exception(
         backoff.expo,
         (requests.exceptions.RequestException),
-        max_tries=5,
-        giveup=lambda e: e.response is not None and e.response.status_code >= 400,
+        max_tries=7,
         factor=2,
     )
     def _request_with_backoff(
         self, prepared_request, context: Optional[dict]
     ) -> requests.Response:
+
         response = self.requests_session.send(prepared_request)
         if self._LOG_REQUEST_METRICS:
             extra_tags = {}
@@ -210,3 +212,5 @@ class TapDgIceStreamComplete(GraphQLStream):
             )
         self.logger.debug("Response received successfully.")
         return response
+
+

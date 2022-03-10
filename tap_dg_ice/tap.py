@@ -14,6 +14,12 @@ from tap_dg_ice.timestamped_streams import (
     IceUSDCPAir,
 )
 
+from tap_dg_ice.complete_streams import (
+    DGTokenHoldersEth,
+    DGTokenHoldersPolygon,
+)
+
+
 STREAM_TYPES = [
     IceTransferEvents,
     InitialMintingEvent,
@@ -21,6 +27,8 @@ STREAM_TYPES = [
     UpgradeResolvedEvents,
     NFTItems,
     IceUSDCPAir,
+    DGTokenHoldersEth,
+    DGTokenHoldersPolygon,
 ]
 
 
@@ -32,7 +40,9 @@ class TapTapDgIce(Tap):
     config_jsonschema = th.PropertiesList(
         th.Property("start_updated_at", th.IntegerType, default=1),
         th.Property("api_url", th.StringType, default='https://api.thegraph.com/subgraphs/name/satoshi-naoki/decentralgamesice'),
-        th.Property("quickswap_api_url", th.StringType, default='https://api.thegraph.com/subgraphs/name/sameepsi/quickswap06')
+        th.Property("quickswap_api_url", th.StringType, default='https://api.thegraph.com/subgraphs/name/sameepsi/quickswap06'),
+        th.Property("dg_token_eth", th.StringType, default='https://api.thegraph.com/subgraphs/name/satoshi-naoki/decentral-games-ethereum'),
+        th.Property("dg_token_polygon", th.StringType, default='https://api.thegraph.com/subgraphs/name/satoshi-naoki/decentral-games-polygon'),
     ).to_dict()
 
 
