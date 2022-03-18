@@ -7,6 +7,7 @@ from typing import Any, Dict, Optional, Union, List, Iterable
 from singer_sdk import typing as th  # JSON Schema typing helpers
 
 from tap_dg_ice.client import TapDgIceStream
+from singer_sdk.streams import RESTStream
 
 class IceTransferEvents(TapDgIceStream):
     """Define custom stream."""
@@ -331,4 +332,115 @@ class IceUSDCPAir(TapDgIceStream):
         th.Property("dailyVolumeToken0", th.StringType),
         th.Property("dailyVolumeToken1", th.StringType),
         th.Property("dailyTxns", th.StringType)
+    ).to_dict()
+
+class SecondaryRevenueICETransfer(TapDgIceStream):
+    """Define custom stream."""
+    name = "secondary_revenue_ice_transfer"
+
+    @property
+    def url_base(self) -> str:
+        """Return the API URL root, configurable via tap settings."""
+        return self.config["secondary_revenue_graph_url"]
+    
+    primary_keys = ["id"]
+    replication_key = 'timestamp'
+    replication_method = "INCREMENTAL"
+    is_sorted = True
+    object_returned = 'transferEvents'
+    query = """
+    query ($timestamp: Int!)
+        {
+            transferEvents(
+                first:1000,
+                orderBy: timestamp,
+                orderDirection: asc,
+                where:{
+                    timestamp_gte: $timestamp
+                }) {
+                id
+                to {
+                    id
+                }
+                from {
+                    id
+                }
+                tokenId
+                tokenAddress
+                contractAddress
+                timestamp
+            }
+
+        }
+
+        
+    """
+
+
+    def post_process(self, row: dict, context: Optional[dict] = None) -> dict:
+        """Generate row id"""
+        row['timestamp'] = int(row['timestamp'])
+
+        return row
+
+
+
+    def get_child_context(self, record: dict, context: Optional[dict]) -> dict:
+        """Return a context dictionary for child streams."""
+        return {
+            "transactionId": record['id']
+        }
+
+    schema = th.PropertiesList(
+        th.Property("id", th.StringType),
+        th.Property("timestamp", th.IntegerType),
+        th.Property("tokenId", th.StringType),
+        th.Property("tokenAddress", th.StringType),
+        th.Property("contractAddress", th.StringType),
+         th.Property("from", th.ObjectType(
+            th.Property("id", th.StringType),
+        )),
+        th.Property("to", th.ObjectType(
+            th.Property("id", th.StringType),
+        )),
+    ).to_dict()
+
+class SecondaryRevenueICETransferDetails(RESTStream):
+    """Define custom stream."""
+    name = "secondary_revenue_ice_transfer_details"
+
+
+    @property
+    def url_base(self) -> str:
+        """Return the API URL root, configurable via tap settings."""
+        return self.config["secondary_revenue_api_url"]
+    path = "/ice/secondaryRevenue"
+
+    # Child stream
+    parent_stream_type = SecondaryRevenueICETransfer
+
+    primary_keys = ["id"]
+    replication_key = 'id'
+    replication_method = "INCREMENTAL"
+    ignore_parent_replication_keys = True
+
+
+    def post_process(self, row: dict, context: Optional[dict] = None) -> dict:
+        """Add hash"""
+        row['id'] = context['transactionId']
+        row['paymentTokenAmount'] = str(row['paymentTokenAmount'])
+        return row
+
+    def get_url_params(
+        self, context: Optional[dict], next_page_token: Optional[Any]
+    ) -> Dict[str, Any]:
+        return {"transactionId": context['transactionId']}
+
+
+
+    schema = th.PropertiesList(
+        th.Property("id", th.StringType),
+        th.Property("contractAddress", th.StringType),
+        th.Property("paymentTokenAddress", th.StringType),
+        th.Property("paymentTokenAmount", th.StringType),
     ).to_dict()
