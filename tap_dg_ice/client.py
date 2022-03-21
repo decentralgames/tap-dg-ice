@@ -1,12 +1,12 @@
 """GraphQL client handling, including TapDgIceStream base class."""
 
-import requests, backoff
+import requests, backoff, logging
 from pathlib import Path
 from typing import Any, Dict, Optional, Union, List, Iterable, cast
 
 from singer_sdk import typing as th  # JSON Schema typing helpers
 
-from singer_sdk.streams import GraphQLStream
+from singer_sdk.streams import GraphQLStream, RESTStream
 
 RESULTS_PER_PAGE = 1000
 
@@ -214,3 +214,44 @@ class TapDgIceStreamByKey(GraphQLStream):
         return response
 
 
+
+class TapDgIceRestStream(RESTStream):
+
+
+    @backoff.on_exception(
+        backoff.expo,
+        (requests.exceptions.RequestException),
+        max_tries=8,
+        factor=3,
+    )
+    def _request_with_backoff(
+        self, prepared_request, context: Optional[dict]
+    ) -> requests.Response:
+        response = self.requests_session.send(prepared_request)
+        if self._LOG_REQUEST_METRICS:
+            extra_tags = {}
+            if self._LOG_REQUEST_METRIC_URLS:
+                extra_tags["url"] = cast(str, prepared_request.path_url)
+            self._write_request_duration_log(
+                endpoint=self.path,
+                response=response,
+                context=context,
+                extra_tags=extra_tags,
+            )
+        if response.status_code in [401, 403]:
+            self.logger.info("Failed request for {}".format(prepared_request.url))
+            self.logger.info(
+                f"Reason: {response.status_code} - {str(response.content)}"
+            )
+            raise RuntimeError(
+                "Requested resource was unauthorized, forbidden, or not found."
+            )
+        elif response.status_code >= 400:
+            raise RuntimeError(
+                f"Error making request to API: {prepared_request.url} "
+                f"[{response.status_code} - {str(response.content)}]".replace(
+                    "\\n", "\n"
+                )
+            )
+        logging.debug("Response received successfully.")
+        return response
