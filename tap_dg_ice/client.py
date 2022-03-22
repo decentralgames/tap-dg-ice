@@ -221,7 +221,7 @@ class TapDgIceRestStream(RESTStream):
     @backoff.on_exception(
         backoff.expo,
         (requests.exceptions.RequestException),
-        max_tries=8,
+        max_tries=15,
         factor=3,
     )
     def _request_with_backoff(

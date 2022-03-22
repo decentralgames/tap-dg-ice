@@ -343,6 +343,19 @@ class SecondaryRevenueICETransfer(TapDgIceStream):
         """Return the API URL root, configurable via tap settings."""
         return self.config["secondary_revenue_graph_url"]
     
+
+    def get_starting_timestamp(
+        self, context: Optional[dict]
+    ) -> Optional[int]:
+        """Return `start_date` config, or state if using timestamp replication."""
+        if self.is_timestamp_replication_key:
+            replication_key_value = self.get_starting_replication_key_value(context)
+            if replication_key_value:
+                return replication_key_value
+
+        return 1643738953 # Hack, remove if need to reprocess data
+
+
     primary_keys = ["id"]
     replication_key = 'timestamp'
     replication_method = "INCREMENTAL"
