@@ -1,6 +1,7 @@
 """Stream type classes for tap-dg-ice."""
 
 import datetime
+import logging
 from pathlib import Path
 from typing import Any, Dict, Optional, Union, List, Iterable
 
@@ -353,7 +354,10 @@ class SecondaryRevenueICETransfer(TapDgIceStream):
             if replication_key_value:
                 return replication_key_value
 
-        return 1643738953 # Hack, remove if need to reprocess data
+        if "start_updated_at" in self.config:
+            return self.config["start_updated_at"]
+
+        return 0
 
 
     primary_keys = ["id"]
@@ -380,8 +384,11 @@ class SecondaryRevenueICETransfer(TapDgIceStream):
                 }
                 tokenId
                 tokenAddress
+                value
                 contractAddress
+                blockNumber
                 timestamp
+                isICE
             }
 
         }
@@ -393,6 +400,7 @@ class SecondaryRevenueICETransfer(TapDgIceStream):
     def post_process(self, row: dict, context: Optional[dict] = None) -> dict:
         """Generate row id"""
         row['timestamp'] = int(row['timestamp'])
+        row['blockNumber'] = int(row['blockNumber'])
 
         return row
 
@@ -401,7 +409,8 @@ class SecondaryRevenueICETransfer(TapDgIceStream):
     def get_child_context(self, record: dict, context: Optional[dict]) -> dict:
         """Return a context dictionary for child streams."""
         return {
-            "transactionId": record['id']
+            "transactionId": record['id'],
+            "value": record['value']
         }
 
     schema = th.PropertiesList(
@@ -410,6 +419,9 @@ class SecondaryRevenueICETransfer(TapDgIceStream):
         th.Property("tokenId", th.StringType),
         th.Property("tokenAddress", th.StringType),
         th.Property("contractAddress", th.StringType),
+        th.Property("blockNumber", th.IntegerType),
+        th.Property("value", th.StringType),
+        th.Property("isICE", th.BooleanType),
          th.Property("from", th.ObjectType(
             th.Property("id", th.StringType),
         )),
@@ -447,9 +459,7 @@ class SecondaryRevenueICETransferDetails(RESTStream):
     def get_url_params(
         self, context: Optional[dict], next_page_token: Optional[Any]
     ) -> Dict[str, Any]:
-        return {"transactionId": context['transactionId']}
-
-
+        return {"transactionId": context['transactionId']}            
 
     schema = th.PropertiesList(
         th.Property("id", th.StringType),
