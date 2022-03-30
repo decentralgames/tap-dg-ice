@@ -1,5 +1,6 @@
 """Stream type classes for tap-dg-ice."""
 
+import time
 import datetime
 import logging
 from pathlib import Path
@@ -448,6 +449,13 @@ class SecondaryRevenueICETransferDetails(RESTStream):
     replication_key = 'id'
     replication_method = "INCREMENTAL"
     ignore_parent_replication_keys = True
+
+
+    def get_records(self, context: Optional[dict]) -> Iterable[Dict[str, Any]]:
+        for row in self.request_records(context):
+            time.sleep(0.75)
+            row = self.post_process(row, context)
+            yield row
 
 
     def get_starting_timestamp(
