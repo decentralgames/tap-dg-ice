@@ -31,8 +31,8 @@ STREAM_TYPES = [
     IceUSDCPAir,
     DGTokenHoldersEth,
     DGTokenHoldersPolygon,
-    SecondaryRevenueICETransfer,
-    SecondaryRevenueICETransferDetails,
+    #SecondaryRevenueICETransfer,
+    #SecondaryRevenueICETransferDetails,
 ]
 
 class TapTapDgIce(Tap):
