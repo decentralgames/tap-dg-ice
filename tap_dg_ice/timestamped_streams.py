@@ -3,8 +3,9 @@
 import time
 import datetime
 import logging
+import backoff, requests
 from pathlib import Path
-from typing import Any, Dict, Optional, Union, List, Iterable
+from typing import Any, Dict, Optional, Union, List, Iterable, cast
 
 from singer_sdk import typing as th  # JSON Schema typing helpers
 
@@ -480,6 +481,39 @@ class SecondaryRevenueICETransferDetails(RESTStream):
         self, context: Optional[dict], next_page_token: Optional[Any]
     ) -> Dict[str, Any]:
         return {"transactionId": context['transactionId']}            
+
+
+    @backoff.on_exception(
+        backoff.expo,
+        (requests.exceptions.RequestException),
+        max_tries=10,
+        giveup=lambda e: e.response is not None and 400 <= e.response.status_code < 500 and e.response.status_code != 429 and e.response.status_code != 502,
+        factor=3,
+    )
+    def _request_with_backoff(
+        self, prepared_request, context: Optional[dict]
+    ) -> requests.Response:
+        response = self.requests_session.send(prepared_request)
+        if self._LOG_REQUEST_METRICS:
+            extra_tags = {}
+            if self._LOG_REQUEST_METRIC_URLS:
+                extra_tags["url"] = cast(str, prepared_request.path_url)
+            self._write_request_duration_log(
+                endpoint=self.path,
+                response=response,
+                context=context,
+                extra_tags=extra_tags,
+            )
+        if response.status_code >= 401:
+            self.logger.info("Failed request for {}".format(prepared_request.url))
+            self.logger.info(
+                f"Reason: {response.status_code} - {str(response.content)}"
+            )
+            raise requests.exceptions.RequestException(
+                request=prepared_request,
+                response=response
+            )
+        return response
 
     schema = th.PropertiesList(
         th.Property("id", th.StringType),
