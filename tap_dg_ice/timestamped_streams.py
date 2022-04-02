@@ -440,9 +440,9 @@ class SecondaryRevenueICETransferDetails(RESTStream):
 
     @property
     def url_base(self) -> str:
-        """Return the API URL root, configurable via tap settings."""
-        return self.config["secondary_revenue_api_url"]
-    path = "/ice/secondaryRevenue"
+        """Uses direct grab from RPCs"""
+        return ""
+    path = ""
 
     # Child stream
     parent_stream_type = SecondaryRevenueICETransfer

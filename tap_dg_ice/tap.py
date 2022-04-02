@@ -46,7 +46,6 @@ class TapTapDgIce(Tap):
         th.Property("dg_token_eth", th.StringType, default='https://api.thegraph.com/subgraphs/name/satoshi-naoki/decentral-games-ethereum'),
         th.Property("dg_token_polygon", th.StringType, default='https://api.thegraph.com/subgraphs/name/satoshi-naoki/decentral-games-polygon'),
         th.Property("secondary_revenue_graph_url", th.StringType, default='https://api.thegraph.com/subgraphs/name/tabatha-decentralgames/secondary-revenue-ice'),
-        th.Property("secondary_revenue_api_url", th.StringType, default='https://api.testing.decentral.games'),
     ).to_dict()
 
 
