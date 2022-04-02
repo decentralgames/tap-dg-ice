@@ -11,6 +11,7 @@ from singer_sdk import typing as th  # JSON Schema typing helpers
 
 from tap_dg_ice.client import TapDgIceStream
 from singer_sdk.streams import RESTStream
+from tap_dg_ice.getSecondaryRevenue import getSecondaryRevenue
 
 class IceTransferEvents(TapDgIceStream):
     """Define custom stream."""
@@ -453,10 +454,9 @@ class SecondaryRevenueICETransferDetails(RESTStream):
 
 
     def get_records(self, context: Optional[dict]) -> Iterable[Dict[str, Any]]:
-        for row in self.request_records(context):
-            time.sleep(0.75)
-            row = self.post_process(row, context)
-            yield row
+        row = getSecondaryRevenue(context["transactionId"])
+        row = self.post_process(row, context)
+        yield row
 
     def post_process(self, row: dict, context: Optional[dict] = None) -> dict:
         """Add hash"""
@@ -469,38 +469,6 @@ class SecondaryRevenueICETransferDetails(RESTStream):
     ) -> Dict[str, Any]:
         return {"transactionId": context['transactionId']}            
 
-
-    @backoff.on_exception(
-        backoff.expo,
-        (requests.exceptions.RequestException),
-        max_tries=10,
-        giveup=lambda e: e.response is not None and 400 <= e.response.status_code < 500 and e.response.status_code != 429 and e.response.status_code != 502,
-        factor=3,
-    )
-    def _request_with_backoff(
-        self, prepared_request, context: Optional[dict]
-    ) -> requests.Response:
-        response = self.requests_session.send(prepared_request)
-        if self._LOG_REQUEST_METRICS:
-            extra_tags = {}
-            if self._LOG_REQUEST_METRIC_URLS:
-                extra_tags["url"] = cast(str, prepared_request.path_url)
-            self._write_request_duration_log(
-                endpoint=self.path,
-                response=response,
-                context=context,
-                extra_tags=extra_tags,
-            )
-        if response.status_code >= 401:
-            self.logger.info("Failed request for {}".format(prepared_request.url))
-            self.logger.info(
-                f"Reason: {response.status_code} - {str(response.content)}"
-            )
-            raise requests.exceptions.RequestException(
-                request=prepared_request,
-                response=response
-            )
-        return response
 
     schema = th.PropertiesList(
         th.Property("id", th.StringType),
