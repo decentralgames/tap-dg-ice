@@ -16,7 +16,7 @@ class GetRevenueException(Exception):
 
 @backoff.on_exception(backoff.expo,
                       (TransactionNotFound),
-                      max_tries=8)
+                      max_tries=10)
 def getReceipts(transaction_id):
     receipts = w3.eth.get_transaction_receipt(transaction_id)
     return receipts
