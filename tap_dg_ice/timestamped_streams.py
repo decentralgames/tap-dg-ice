@@ -399,11 +399,24 @@ class SecondaryRevenueICETransfer(TapDgIceStream):
         
     """
 
+    def get_records(self, context: Optional[dict]) -> Iterable[Dict[str, Any]]:
+        for record in self.request_records(context):
+            revenueData = getSecondaryRevenue(record["id"])
+            record["paymentTokenAddress"] = revenueData["paymentTokenAddress"]
+            record["paymentTokenAmount"] = revenueData["paymentTokenAmount"]
+            transformed_record = self.post_process(record, context)
+            if transformed_record is None:
+                # Record filtered out during post_process()
+                continue
+            yield transformed_record
+
+
 
     def post_process(self, row: dict, context: Optional[dict] = None) -> dict:
         """Generate row id"""
         row['timestamp'] = int(row['timestamp'])
         row['blockNumber'] = int(row['blockNumber'])
+        row['paymentTokenAmount'] = str(row['paymentTokenAmount'])
 
         return row
 
@@ -431,48 +444,6 @@ class SecondaryRevenueICETransfer(TapDgIceStream):
         th.Property("to", th.ObjectType(
             th.Property("id", th.StringType),
         )),
-    ).to_dict()
-
-class SecondaryRevenueICETransferDetails(RESTStream):
-    """Define custom stream."""
-    name = "secondary_revenue_ice_transfer_details"
-
-
-    @property
-    def url_base(self) -> str:
-        """Uses direct grab from RPCs"""
-        return ""
-    path = ""
-
-    # Child stream
-    parent_stream_type = SecondaryRevenueICETransfer
-
-    primary_keys = ["id"]
-    replication_key = 'id'
-    replication_method = "INCREMENTAL"
-    ignore_parent_replication_keys = True
-
-
-    def get_records(self, context: Optional[dict]) -> Iterable[Dict[str, Any]]:
-        row = getSecondaryRevenue(context["transactionId"])
-        row = self.post_process(row, context)
-        yield row
-
-    def post_process(self, row: dict, context: Optional[dict] = None) -> dict:
-        """Add hash"""
-        row['id'] = context['transactionId']
-        row['paymentTokenAmount'] = str(row['paymentTokenAmount'])
-        return row
-
-    def get_url_params(
-        self, context: Optional[dict], next_page_token: Optional[Any]
-    ) -> Dict[str, Any]:
-        return {"transactionId": context['transactionId']}            
-
-
-    schema = th.PropertiesList(
-        th.Property("id", th.StringType),
-        th.Property("contractAddress", th.StringType),
         th.Property("paymentTokenAddress", th.StringType),
         th.Property("paymentTokenAmount", th.StringType),
     ).to_dict()

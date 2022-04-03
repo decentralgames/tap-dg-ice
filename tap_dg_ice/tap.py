@@ -13,7 +13,6 @@ from tap_dg_ice.timestamped_streams import (
     NFTItems,
     IceUSDCPAir,
     SecondaryRevenueICETransfer,
-    SecondaryRevenueICETransferDetails,
 )
 
 from tap_dg_ice.complete_streams import (
@@ -32,7 +31,6 @@ STREAM_TYPES = [
     DGTokenHoldersEth,
     DGTokenHoldersPolygon,
     SecondaryRevenueICETransfer,
-    SecondaryRevenueICETransferDetails,
 ]
 
 class TapTapDgIce(Tap):
