@@ -95,6 +95,7 @@ class InitialMintingEvent(TapDgIceStream):
                         id
                     }
                     timestamp
+                    paymentToken
             }
         }
     """
