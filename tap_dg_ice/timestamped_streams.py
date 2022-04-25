@@ -108,6 +108,7 @@ class InitialMintingEvent(TapDgIceStream):
             th.Property("id", th.StringType),
         )),
         th.Property("mintCount", th.StringType),
+        th.Property("paymentToken", th.StringType),
     ).to_dict()
 
     def post_process(self, row: dict, context: Optional[dict] = None) -> dict:
