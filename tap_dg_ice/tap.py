@@ -27,7 +27,6 @@ STREAM_TYPES = [
     UpgradeItemEvent,
     UpgradeResolvedEvents,
     NFTItems,
-    IceUSDCPAir,
     DGTokenHoldersEth,
     DGTokenHoldersPolygon,
     SecondaryRevenueICETransfer,
