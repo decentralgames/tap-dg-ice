@@ -11,7 +11,6 @@ from tap_dg_ice.timestamped_streams import (
     UpgradeItemEvent,
     UpgradeResolvedEvents,
     NFTItems,
-    IceUSDCPAir,
     SecondaryRevenueICETransfer,
 )
 
