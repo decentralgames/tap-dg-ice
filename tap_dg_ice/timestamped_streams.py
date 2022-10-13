@@ -16,7 +16,7 @@ from tap_dg_ice.getSecondaryRevenue import getSecondaryRevenue
 class IceTransferEvents(TapDgIceStream):
     """Define custom stream."""
     name = "ice_level_transfer_events"
-    
+
     primary_keys = ["id"]
     replication_key = 'timestamp'
     replication_method = "INCREMENTAL"
@@ -71,34 +71,36 @@ class IceTransferEvents(TapDgIceStream):
 
 class InitialMintingEvent(TapDgIceStream):
     """Define custom stream."""
+
     name = "ice_initial_minting_event"
-    
     primary_keys = ["id"]
     replication_key = 'timestamp'
     replication_method = "INCREMENTAL"
     is_sorted = True
     object_returned = 'initialMintingEvents'
+
     query = """
-    query ($timestamp: Int!)
-        {
-            initialMintingEvents(
-                first: 1000,
-                    orderBy: timestamp,
-                    orderDirection: asc,
-                    where:{
-                        timestamp_gte: $timestamp
-            }) {
-                    id
-                    tokenId
-                    mintCount
-                    tokenOwner {
+        query ($timestamp: Int!)
+            {
+                initialMintingEvents(
+                    first: 1000,
+                        orderBy: timestamp,
+                        orderDirection: asc,
+                        where:{
+                            timestamp_gte: $timestamp
+                }) {
                         id
-                    }
-                    timestamp
-                    paymentToken
+                        tokenId
+                        mintCount
+                        mintPrice
+                        tokenOwner {
+                            id
+                        }
+                        timestamp
+                        paymentToken
+                }
             }
-        }
-    """
+        """
 
     schema = th.PropertiesList(
         th.Property("id", th.StringType),
@@ -108,6 +110,7 @@ class InitialMintingEvent(TapDgIceStream):
             th.Property("id", th.StringType),
         )),
         th.Property("mintCount", th.StringType),
+        th.Property("mintPrice", th.StringType),
         th.Property("paymentToken", th.StringType),
     ).to_dict()
 
@@ -120,36 +123,36 @@ class InitialMintingEvent(TapDgIceStream):
 class UpgradeItemEvent(TapDgIceStream):
     """Define custom stream."""
     name = "ice_upgrade_item_event"
-    
+
     primary_keys = ["id"]
     replication_key = 'timestamp'
     replication_method = "INCREMENTAL"
     is_sorted = True
     object_returned = 'upgradeItemEvents'
     query = """
-    query ($timestamp: Int!)
-        {
-            upgradeItemEvents(
-                first: 1000,
-                    orderBy: timestamp,
-                    orderDirection: asc,
-                    where:{
-                        timestamp_gte: $timestamp
-            }) {
-                    id
-                    itemId
-                    issuedId
-                    tokenOwner{
+        query ($timestamp: Int!)
+            {
+                upgradeItemEvents(
+                    first: 1000,
+                        orderBy: timestamp,
+                        orderDirection: asc,
+                        where:{
+                            timestamp_gte: $timestamp
+                }) {
                         id
-                    }
-                    tokenId
-                        tokenAddress{
-                        address
-                    }
-                    requestIndex
-                    timestamp
+                        itemId
+                        issuedId
+                        tokenOwner{
+                            id
+                        }
+                        tokenId
+                            tokenAddress{
+                            address
+                        }
+                        requestIndex
+                        timestamp
+                }
             }
-        }
     """
 
     schema = th.PropertiesList(
@@ -177,7 +180,7 @@ class UpgradeItemEvent(TapDgIceStream):
 class UpgradeResolvedEvents(TapDgIceStream):
     """Define custom stream."""
     name = "ice_upgrade_resolved_events"
-    
+
     primary_keys = ["id"]
     replication_key = 'timestamp'
     replication_method = "INCREMENTAL"
@@ -287,7 +290,7 @@ class SecondaryRevenueICETransfer(TapDgIceStream):
     def url_base(self) -> str:
         """Return the API URL root, configurable via tap settings."""
         return self.config["secondary_revenue_graph_url"]
-    
+
 
     def get_starting_timestamp(
         self, context: Optional[dict]
@@ -337,7 +340,7 @@ class SecondaryRevenueICETransfer(TapDgIceStream):
 
         }
 
-        
+
     """
 
     def get_records(self, context: Optional[dict]) -> Iterable[Dict[str, Any]]:

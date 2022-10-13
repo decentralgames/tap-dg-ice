@@ -31,6 +31,7 @@ STREAM_TYPES = [
     SecondaryRevenueICETransfer,
 ]
 
+
 class TapTapDgIce(Tap):
     """TapDgIce tap class."""
     name = "tap-dg-ice"
